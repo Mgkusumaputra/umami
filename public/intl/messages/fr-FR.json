@@ -11,7 +11,7 @@
       "value": "Actions"
     }
   ],
-  "label.activity-log": [
+  "label.activity": [
     {
       "type": 0,
       "value": "Journal d'activité"
@@ -404,7 +404,7 @@
   "label.entry": [
     {
       "type": 0,
-      "value": "Entry URL"
+      "value": "URL d'entrée"
     }
   ],
   "label.event": [
@@ -473,6 +473,12 @@
       "value": "Filtres"
     }
   ],
+  "label.first-seen": [
+    {
+      "type": 0,
+      "value": "Vu pour la première fois"
+    }
+  ],
   "label.funnel": [
     {
       "type": 0,
@@ -500,7 +506,7 @@
   "label.goals-description": [
     {
       "type": 0,
-      "value": "Track your goals for pageviews and events."
+      "value": "Suivez vos objectifs en matière de pages vues et d'événements."
     }
   ],
   "label.greater-than": [
@@ -584,7 +590,7 @@
   "label.journey-description": [
     {
       "type": 0,
-      "value": "Understand how users nagivate through your website."
+      "value": "Comprendre comment les utilisateurs naviguent sur votre site web."
     }
   ],
   "label.language": [
@@ -633,6 +639,12 @@
     {
       "type": 0,
       "value": " derniers mois"
+    }
+  ],
+  "label.last-seen": [
+    {
+      "type": 0,
+      "value": "Last seen"
     }
   ],
   "label.leave": [
@@ -849,6 +861,18 @@
       "value": "Mot de passe"
     }
   ],
+  "label.path": [
+    {
+      "type": 0,
+      "value": "Path"
+    }
+  ],
+  "label.paths": [
+    {
+      "type": 0,
+      "value": "Paths"
+    }
+  ],
   "label.powered-by": [
     {
       "type": 0,
@@ -862,19 +886,19 @@
   "label.previous": [
     {
       "type": 0,
-      "value": "Previous"
+      "value": "Précédent"
     }
   ],
   "label.previous-period": [
     {
       "type": 0,
-      "value": "Previous period"
+      "value": "Période précédente"
     }
   ],
   "label.previous-year": [
     {
       "type": 0,
-      "value": "Previous year"
+      "value": "Année précédente"
     }
   ],
   "label.profile": [
@@ -883,10 +907,16 @@
       "value": "Profil"
     }
   ],
+  "label.properties": [
+    {
+      "type": 0,
+      "value": "Propriétés"
+    }
+  ],
   "label.property": [
     {
       "type": 0,
-      "value": "Property"
+      "value": "Propriété"
     }
   ],
   "label.queries": [
@@ -997,6 +1027,24 @@
       "value": "Mesure de l'attractivité du site en visualisant les taux de visiteurs qui reviennent."
     }
   ],
+  "label.revenue": [
+    {
+      "type": 0,
+      "value": "Revenue"
+    }
+  ],
+  "label.revenue-description": [
+    {
+      "type": 0,
+      "value": "Examinez vos revenus au fil du temps."
+    }
+  ],
+  "label.revenue-property": [
+    {
+      "type": 0,
+      "value": "Propriétés des revenues"
+    }
+  ],
   "label.role": [
     {
       "type": 0,
@@ -1030,7 +1078,7 @@
   "label.select": [
     {
       "type": 0,
-      "value": "Select"
+      "value": "Selectionner"
     }
   ],
   "label.select-date": [
@@ -1049,6 +1097,12 @@
     {
       "type": 0,
       "value": "Choisir un site"
+    }
+  ],
+  "label.session": [
+    {
+      "type": 0,
+      "value": "Session"
     }
   ],
   "label.sessions": [
@@ -1078,7 +1132,7 @@
   "label.start-step": [
     {
       "type": 0,
-      "value": "Start Step"
+      "value": "Etape de démarrage"
     }
   ],
   "label.steps": [
@@ -1114,7 +1168,7 @@
   "label.team-manager": [
     {
       "type": 0,
-      "value": "Team manager"
+      "value": "Manager de l'équipe"
     }
   ],
   "label.team-member": [
@@ -1138,7 +1192,7 @@
   "label.team-view-only": [
     {
       "type": 0,
-      "value": "Team view only"
+      "value": "Vue d'équipe uniquement"
     }
   ],
   "label.team-websites": [
@@ -1219,6 +1273,12 @@
       "value": "Code de suivi"
     }
   ],
+  "label.transactions": [
+    {
+      "type": 0,
+      "value": "Transactions"
+    }
+  ],
   "label.transfer": [
     {
       "type": 0,
@@ -1255,6 +1315,12 @@
       "value": "Visiteurs uniques"
     }
   ],
+  "label.uniqueCustomers": [
+    {
+      "type": 0,
+      "value": "Clients uniques"
+    }
+  ],
   "label.unknown": [
     {
       "type": 0,
@@ -1289,6 +1355,12 @@
     {
       "type": 0,
       "value": "Utilisateur"
+    }
+  ],
+  "label.user-property": [
+    {
+      "type": 0,
+      "value": "Propriétés d'utilisateurs"
     }
   ],
   "label.username": [
