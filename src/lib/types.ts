@@ -158,6 +158,7 @@ export interface QueryFilters {
   event?: string;
   search?: string;
   tag?: string;
+  cohort?: { [key: string]: string };
 }
 
 export interface QueryOptions {
@@ -197,8 +198,7 @@ export interface SessionData {
   screen: string;
   language: string;
   country: string;
-  subdivision1: string;
-  subdivision2: string;
+  region: string;
   city: string;
   ip?: string;
   userAgent?: string;

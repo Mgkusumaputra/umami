@@ -1,5 +1,6 @@
 import debug from 'debug';
-import prisma from '@umami/prisma-client';
+import { PrismaClient } from '@prisma/client';
+import { readReplicas } from '@prisma/extension-read-replicas';
 import { formatInTimeZone } from 'date-fns-tz';
 import { MYSQL, POSTGRESQL, getDatabaseType } from '@/lib/db';
 import { SESSION_COLUMNS, OPERATORS, DEFAULT_PAGE_SIZE } from './constants';
@@ -9,6 +10,16 @@ import { QueryFilters, QueryOptions, PageParams } from './types';
 import { filtersToArray } from './params';
 
 const log = debug('umami:prisma');
+
+const PRISMA = 'prisma';
+const PRISMA_LOG_OPTIONS = {
+  log: [
+    {
+      emit: 'event',
+      level: 'query',
+    },
+  ],
+};
 
 const MYSQL_DATE_FORMATS = {
   minute: '%Y-%m-%dT%H:%i:00',
@@ -144,6 +155,24 @@ function mapFilter(column: string, operator: string, name: string, type: string 
   }
 }
 
+function mapCohortFilter(column: string, operator: string, value: string) {
+  const db = getDatabaseType();
+  const like = db === POSTGRESQL ? 'ilike' : 'like';
+
+  switch (operator) {
+    case OPERATORS.equals:
+      return `${column} = '${value}'`;
+    case OPERATORS.notEquals:
+      return `${column} != '${value}'`;
+    case OPERATORS.contains:
+      return `${column} ${like} '${value}'`;
+    case OPERATORS.doesNotContain:
+      return `${column} not ${like} '${value}'`;
+    default:
+      return '';
+  }
+}
+
 function getFilterQuery(filters: QueryFilters = {}, options: QueryOptions = {}): string {
   const query = filtersToArray(filters, options).reduce((arr, { name, column, operator }) => {
     if (column) {
@@ -151,7 +180,7 @@ function getFilterQuery(filters: QueryFilters = {}, options: QueryOptions = {}):
 
       if (name === 'referrer') {
         arr.push(
-          `and (website_event.referrer_domain != session.hostname or website_event.referrer_domain is null)`,
+          `and (website_event.referrer_domain != website_event.hostname or website_event.referrer_domain is null)`,
         );
       }
     }
@@ -160,6 +189,43 @@ function getFilterQuery(filters: QueryFilters = {}, options: QueryOptions = {}):
   }, []);
 
   return query.join('\n');
+}
+
+function getCohortQuery(websiteId: string, filters: QueryFilters = {}, options: QueryOptions = {}) {
+  const query = filtersToArray(filters, options).reduce(
+    (arr, { name, column, operator, value }) => {
+      if (column) {
+        arr.push(
+          `${arr.length === 0 ? 'where' : 'and'} ${mapCohortFilter(column, operator, value)}`,
+        );
+
+        if (name === 'referrer') {
+          arr.push(`and referrer_domain != hostname`);
+        }
+      }
+
+      return arr;
+    },
+    [],
+  );
+
+  if (query.length > 0) {
+    // add website and date range filters
+    query.push(`and website_event.website_id = '${websiteId}'`);
+    query.push(
+      `and website_event.created_at between '${filters.startDate}'::timestamptz and '${filters.endDate}'::timestamptz`,
+    );
+
+    return `join
+    (select distinct website_event.session_id
+    from website_event
+    join session on session.session_id = website_event.session_id
+    ${query.join('\n')}) cohort
+    on cohort.session_id = website_event.session_id
+    `;
+  }
+
+  return '';
 }
 
 function getDateQuery(filters: QueryFilters = {}) {
@@ -208,6 +274,7 @@ async function parseFilters(
       websiteId,
       startDate: maxDate(filters.startDate, website?.resetAt),
     },
+    cohortQuery: getCohortQuery(websiteId, filters?.cohort),
   };
 }
 
@@ -234,14 +301,16 @@ async function rawQuery(sql: string, data: object): Promise<any> {
     return db === MYSQL ? '?' : `$${params.length}${type ?? ''}`;
   });
 
-  return prisma.rawQuery(query, params);
+  return process.env.DATABASE_REPLICA_URL
+    ? client.$replica().$queryRawUnsafe(query, ...params)
+    : client.$queryRawUnsafe(query, ...params);
 }
 
 async function pagedQuery<T>(model: string, criteria: T, pageParams: PageParams) {
   const { page = 1, pageSize, orderBy, sortDescending = false } = pageParams || {};
   const size = +pageSize || DEFAULT_PAGE_SIZE;
 
-  const data = await prisma.client[model].findMany({
+  const data = await client[model].findMany({
     ...criteria,
     ...{
       ...(size > 0 && { take: +size, skip: +size * (+page - 1) }),
@@ -255,7 +324,7 @@ async function pagedQuery<T>(model: string, criteria: T, pageParams: PageParams)
     },
   });
 
-  const count = await prisma.client[model].count({ where: (criteria as any).where });
+  const count = await client[model].count({ where: (criteria as any).where });
 
   return { data, count, page: +page, pageSize: size, orderBy };
 }
@@ -323,8 +392,55 @@ function getSearchParameters(query: string, filters: { [key: string]: any }[]) {
   };
 }
 
+function transaction(input: any, options?: any) {
+  return client.$transaction(input, options);
+}
+
+function getClient(params?: {
+  logQuery?: boolean;
+  queryLogger?: () => void;
+  replicaUrl?: string;
+  options?: any;
+}): PrismaClient {
+  const {
+    logQuery = !!process.env.LOG_QUERY,
+    queryLogger,
+    replicaUrl = process.env.DATABASE_REPLICA_URL,
+    options,
+  } = params || {};
+
+  const prisma = new PrismaClient({
+    errorFormat: 'pretty',
+    ...(logQuery && PRISMA_LOG_OPTIONS),
+    ...options,
+  });
+
+  if (replicaUrl) {
+    prisma.$extends(
+      readReplicas({
+        url: replicaUrl,
+      }),
+    );
+  }
+
+  if (logQuery) {
+    prisma.$on('query' as never, queryLogger || log);
+  }
+
+  if (process.env.NODE_ENV !== 'production') {
+    global[PRISMA] = prisma;
+  }
+
+  log('Prisma initialized');
+
+  return prisma;
+}
+
+const client = global[PRISMA] || getClient();
+
 export default {
-  ...prisma,
+  client,
+  transaction,
   getAddIntervalQuery,
   getCastColumnQuery,
   getDayDiffQuery,

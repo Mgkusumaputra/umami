@@ -1,5 +1,7 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-require('dotenv').config();
+import 'dotenv/config';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
 const pkg = require('./package.json');
 
 const TRACKER_SCRIPT = '/script.js';
@@ -10,11 +12,8 @@ const cloudMode = process.env.CLOUD_MODE;
 const cloudUrl = process.env.CLOUD_URL;
 const corsMaxAge = process.env.CORS_MAX_AGE;
 const defaultLocale = process.env.DEFAULT_LOCALE;
-const disableLogin = process.env.DISABLE_LOGIN;
-const disableUI = process.env.DISABLE_UI;
 const forceSSL = process.env.FORCE_SSL;
-const frameAncestors = process.env.ALLOWED_FRAME_URLS;
-const privateMode = process.env.PRIVATE_MODE;
+const frameAncestors = process.env.ALLOWED_FRAME_URLS ?? '';
 const trackerScriptName = process.env.TRACKER_SCRIPT_NAME;
 const trackerScriptURL = process.env.TRACKER_SCRIPT_URL;
 
@@ -62,26 +61,30 @@ const trackerHeaders = [
 const apiHeaders = [
   {
     key: 'Access-Control-Allow-Origin',
-    value: '*'
+    value: '*',
   },
   {
     key: 'Access-Control-Allow-Headers',
-    value: '*'
+    value: '*',
   },
   {
     key: 'Access-Control-Allow-Methods',
-    value: 'GET, DELETE, POST, PUT'
+    value: 'GET, DELETE, POST, PUT',
   },
   {
     key: 'Access-Control-Max-Age',
-    value: corsMaxAge || '86400'
+    value: corsMaxAge || '86400',
+  },
+  {
+    key: 'Cache-Control',
+    value: 'no-cache',
   },
 ];
 
 const headers = [
   {
     source: '/api/:path*',
-    headers: apiHeaders
+    headers: apiHeaders,
   },
   {
     source: '/:path*',
@@ -166,28 +169,22 @@ if (cloudMode && cloudUrl) {
     permanent: false,
   });
 
-  if (disableLogin) {
-    redirects.push({
-      source: '/login',
-      destination: cloudUrl,
-      permanent: false,
-    });
-  }
+  redirects.push({
+    source: '/login',
+    destination: cloudUrl,
+    permanent: false,
+  });
 }
 
 /** @type {import('next').NextConfig} */
-const config = {
+export default {
   reactStrictMode: false,
   env: {
     basePath,
     cloudMode,
     cloudUrl,
-    configUrl: '/config',
     currentVersion: pkg.version,
     defaultLocale,
-    disableLogin,
-    disableUI,
-    privateMode,
   },
   basePath,
   output: 'standalone',
@@ -197,13 +194,11 @@ const config = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  experimental: {
-    turbo: {
-      rules: {
-        '*.svg': {
-          loaders: ['@svgr/webpack'],
-          as: '*.js',
-        },
+  turbopack: {
+    rules: {
+      '*.svg': {
+        loaders: ['@svgr/webpack'],
+        as: '*.js',
       },
     },
   },
@@ -235,5 +230,3 @@ const config = {
     return [...redirects];
   },
 };
-
-module.exports = config;

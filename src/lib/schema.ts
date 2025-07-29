@@ -17,6 +17,8 @@ export const filterParams = {
   host: z.string().optional(),
   language: z.string().optional(),
   event: z.string().optional(),
+  segment: z.string().optional(),
+  cohort: z.string().optional(),
 };
 
 export const pagingParams = {
@@ -60,6 +62,7 @@ export const reportTypeParam = z.enum([
   'goals',
   'journey',
   'revenue',
+  'attribution',
 ]);
 
 export const reportParms = {
@@ -73,3 +76,5 @@ export const reportParms = {
     value: z.string().optional(),
   }),
 };
+
+export const segmentTypeParam = z.enum(['segment', 'cohort']);
